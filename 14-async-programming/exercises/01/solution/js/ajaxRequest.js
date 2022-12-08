@@ -1,4 +1,4 @@
-import { state, actions } from './store/ajaxRequest.js';
+import { state, actions } from "./store/ajaxRequest.js";
 
 /**
  * Represents a request factory
@@ -13,7 +13,7 @@ import { state, actions } from './store/ajaxRequest.js';
 function ajaxRequest({
   url,
   successCallback,
-  method = 'GET',
+  method = "GET",
   delay = 5000,
   maxRetry = 2,
 } = {}) {
@@ -24,7 +24,7 @@ function ajaxRequest({
    * @param {string} message - the error message
    */
   function handleError(message) {
-
+    console.log("Error: ", message);
   }
 
   /**
@@ -32,14 +32,29 @@ function ajaxRequest({
    * @param {Object} xhr - the error message
    */
   function handleLoad(xhr) {
-
+    console.log("Loaded: ", xhr);
+    successCallback(xhr.response);
   }
 
   /**
    * Send ajax request
    */
   function request() {
-
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.onload = (ev) => handleLoad(ev.target);
+    xhr.send();
+    xhr.onerror = (ev) => {
+      maxRetry -= 1;
+      if (maxRetry === 0) {
+        handleError(ev.message);
+      } else {
+        const to = setTimeout(() => {
+          clearTimeout(to);
+          request();
+        }, delay);
+      }
+    };
   }
 
   return request;
